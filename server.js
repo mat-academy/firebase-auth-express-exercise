@@ -1,10 +1,20 @@
+//TODO: lift out to an environment file
+process.env.GOOGLE_APPLICATION_CREDENTIALS =
+"secrets/firebase-service-account-secrets.json";
+
 const express = require("express");
 const { getAncientWisdom } = require("./bookOfAncientWisdom");
-
+const { initializeApp } = require("firebase-admin/app")
+const firebaseApp = initializeApp();
 const cors = require("cors");
+const { getAuth } = require("firebase-admin/auth");
+const { response } = require("express");
+
 
 const app = express();
 app.use(cors());
+
+
 
 const port = process.env.PORT || 4000;
 
@@ -15,10 +25,24 @@ app.get("/", (req, res) => {
 
 //TODO: Your task will be to secure this route to prevent access by those who are not, at least, logged in.
 app.get("/wisdom", (req, res) => {
-  const authHeaderValue = req.get('Authorization');
+  const authHeaderValue= req.get("Authorization")
   const [junk, accessToken] = authHeaderValue.split(" ");
-  const decodedToken = firebaseThing.verify(accessToken);
-  decodedToken. ;
+
+  if (!accessToken || accessToken.length<10){
+    console.log("ignoring user with bad or missing auth")
+    res.status(401).send("no or bad auth header");
+    return;
+  }
+
+  getAuth()
+    .verifyIdToken(accessToken)
+    .then((decodedToken) => {
+      console.log("Hurrah! Decoded: ", decodedToken); 
+      res.send("🤐: " + getAncientWisdom() + "🤫");
+    }).catch(nope => {
+      res.status(401).send("bad token - look for wisdom elsewhere")
+    })
+
   console.log({ accessToken });
   //Eventual plan:
   //1. authHeader = get the value of the Authorization header
@@ -27,7 +51,7 @@ app.get("/wisdom", (req, res) => {
   //4.     return protected info in response
   //5. else
   //       say access denied in response
-  res.send("🤐: " + getAncientWisdom() + "🤫");
+  
 });
 
 app.listen(port, () => {

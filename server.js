@@ -15,7 +15,11 @@ app.get("/", (req, res) => {
 
 //TODO: Your task will be to secure this route to prevent access by those who are not, at least, logged in.
 app.get("/wisdom", (req, res) => {
-  console.log(req.headers);
+  const authHeaderValue = req.get('Authorization');
+  const [junk, accessToken] = authHeaderValue.split(" ");
+  const decodedToken = firebaseThing.verify(accessToken);
+  decodedToken. ;
+  console.log({ accessToken });
   //Eventual plan:
   //1. authHeader = get the value of the Authorization header
   //2. potentialToken = strip the "Bearer " prefix from authHeader
